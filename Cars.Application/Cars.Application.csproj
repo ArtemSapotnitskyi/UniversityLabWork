@@ -6,4 +6,13 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+        <PackageReference Include="MediatR" Version="12.5.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Cars.Domain\Cars.Domain.csproj" />
+        <ProjectReference Include="..\Cars.Infrastructure\Cars.Infrastructure.csproj" />
+    </ItemGroup>
 </Project>
