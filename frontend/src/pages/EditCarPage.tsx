@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import type { FormEvent } from "react";
+import axios from "axios";
 import type { NewCar } from "../models/Car";
 import { getCarById, updateCar } from "../services/carService";
 
@@ -11,7 +12,7 @@ export default function EditCarPage() {
   const [car, setCar] = useState<NewCar | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>("");
 
   useEffect(() => {
     if (!id) {
@@ -20,9 +21,13 @@ export default function EditCarPage() {
       return;
     }
 
+    const controller = new AbortController();
+
     async function loadCar() {
       try {
-        const data = await getCarById(id!);
+        setLoading(true);
+        setError(null);
+        const data = await getCarById(id!, controller.signal);
         setCar({
           brand: data.brand,
           model: data.model,
@@ -35,12 +40,26 @@ export default function EditCarPage() {
           bodyType: data.bodyType,
         });
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load car.");
+        if (axios.isCancel(err)) {
+          return;
+        }
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Wystąpił nieznany błąd.");
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     }
+
     loadCar();
+
+    return () => {
+      controller.abort();
+    };
   }, [id]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
