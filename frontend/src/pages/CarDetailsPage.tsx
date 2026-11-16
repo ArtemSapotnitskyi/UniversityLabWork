@@ -4,6 +4,7 @@ import axios from "axios";
 import type { Car } from "../models/Car";
 import { getCarById } from "../services/carService";
 import { useCarUiStore } from "../store/useCarUiStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 export default function CarDetailsPage() {
   const { id } = useParams();
@@ -12,8 +13,11 @@ export default function CarDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>("");
 
-  const favoriteCarIds = useCarUiStore((state) => state.favoriteCarIds);
+  const { user } = useAuthStore();
+  const favoritesByUser = useCarUiStore((state) => state.favoritesByUser);
   const toggleFavorite = useCarUiStore((state) => state.toggleFavorite);
+
+  const favoriteCarIds = user?.email ? favoritesByUser[user.email] || [] : [];
 
   useEffect(() => {
     if (!id) {
@@ -112,6 +116,7 @@ export default function CarDetailsPage() {
         <Link to={`/cars/${car.id}/edit`} className="btn">
           Edytuj ten pojazd
         </Link>
+
         <button
           type="button"
           className={
@@ -123,6 +128,7 @@ export default function CarDetailsPage() {
         >
           {isFavorite ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
         </button>
+
         <Link to="/cars" className="btn btn-outline">
           Powrót do garażu
         </Link>

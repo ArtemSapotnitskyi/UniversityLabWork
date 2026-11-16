@@ -4,11 +4,14 @@ import axios from "axios";
 import type { Car } from "../models/Car";
 import { getCars, deleteCar } from "../services/carService";
 import { useCarUiStore } from "../store/useCarUiStore";
+import { useAuthStore } from "../store/useAuthStore";
 
 export default function CarsPage() {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>("");
+
+  const { user } = useAuthStore();
 
   const searchTerm = useCarUiStore((state) => state.searchTerm);
   const setSearchTerm = useCarUiStore((state) => state.setSearchTerm);
@@ -16,9 +19,12 @@ export default function CarsPage() {
   const setShowFavoritesOnly = useCarUiStore(
     (state) => state.setShowFavoritesOnly,
   );
-  const favoriteCarIds = useCarUiStore((state) => state.favoriteCarIds);
+
+  const favoritesByUser = useCarUiStore((state) => state.favoritesByUser);
   const toggleFavorite = useCarUiStore((state) => state.toggleFavorite);
   const removeFavorite = useCarUiStore((state) => state.removeFavorite);
+
+  const favoriteCarIds = user?.email ? favoritesByUser[user.email] || [] : [];
 
   useEffect(() => {
     const controller = new AbortController();
@@ -131,9 +137,16 @@ export default function CarsPage() {
                   <Link to={`/cars/${car.id}`} className="btn">
                     Szczegóły
                   </Link>
-                  <Link to={`/cars/${car.id}/edit`} className="btn btn-outline">
-                    Edytuj
-                  </Link>
+
+                  {user?.role === "Admin" && (
+                    <Link
+                      to={`/cars/${car.id}/edit`}
+                      className="btn btn-outline"
+                    >
+                      Edytuj
+                    </Link>
+                  )}
+
                   <button
                     type="button"
                     className={
@@ -145,12 +158,15 @@ export default function CarsPage() {
                   >
                     {isFavorite ? "Ulubiony" : "Ulubione"}
                   </button>
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => handleDelete(car.id)}
-                  >
-                    Usuń
-                  </button>
+
+                  {user?.role === "Admin" && (
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => handleDelete(car.id)}
+                    >
+                      Usuń
+                    </button>
+                  )}
                 </div>
               </div>
             );

@@ -1,10 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { useAuthStore } from "./useAuthStore";
 
 interface CarUiStore {
   searchTerm: string;
   showFavoritesOnly: boolean;
-  favoriteCarIds: string[];
+  favoritesByUser: Record<string, string[]>;
   setSearchTerm: (value: string) => void;
   setShowFavoritesOnly: (value: boolean) => void;
   toggleFavorite: (id: string) => void;
@@ -17,35 +18,49 @@ export const useCarUiStore = create<CarUiStore>()(
     (set) => ({
       searchTerm: "",
       showFavoritesOnly: false,
-      favoriteCarIds: [],
-      setSearchTerm: (value) =>
-        set({
-          searchTerm: value,
-        }),
-      setShowFavoritesOnly: (value) =>
-        set({
-          showFavoritesOnly: value,
-        }),
-      toggleFavorite: (id) =>
-        set((state) => ({
-          favoriteCarIds: state.favoriteCarIds.includes(id)
-            ? state.favoriteCarIds.filter((item) => item !== id)
-            : [...state.favoriteCarIds, id],
-        })),
-      removeFavorite: (id) =>
-        set((state) => ({
-          favoriteCarIds: state.favoriteCarIds.filter((item) => item !== id),
-        })),
-      clearFavorites: () =>
-        set({
-          favoriteCarIds: [],
-        }),
+      favoritesByUser: {},
+      setSearchTerm: (value) => set({ searchTerm: value }),
+      setShowFavoritesOnly: (value) => set({ showFavoritesOnly: value }),
+
+      toggleFavorite: (id) => {
+        const userEmail = useAuthStore.getState().user?.email;
+        if (!userEmail) return;
+
+        set((state) => {
+          const userFavs = state.favoritesByUser[userEmail] || [];
+          const updatedFavs = userFavs.includes(id)
+            ? userFavs.filter((item) => item !== id)
+            : [...userFavs, id];
+
+          return {
+            favoritesByUser: {
+              ...state.favoritesByUser,
+              [userEmail]: updatedFavs,
+            },
+          };
+        });
+      },
+
+      removeFavorite: (id) => {
+        const userEmail = useAuthStore.getState().user?.email;
+        if (!userEmail) return;
+
+        set((state) => {
+          const userFavs = state.favoritesByUser[userEmail] || [];
+          return {
+            favoritesByUser: {
+              ...state.favoritesByUser,
+              [userEmail]: userFavs.filter((item) => item !== id),
+            },
+          };
+        });
+      },
+
+      clearFavorites: () => set({ favoritesByUser: {} }),
     }),
     {
       name: "cars-ui-store",
-      partialize: (state) => ({
-        favoriteCarIds: state.favoriteCarIds,
-      }),
+      partialize: (state) => ({ favoritesByUser: state.favoritesByUser }),
     },
   ),
 );

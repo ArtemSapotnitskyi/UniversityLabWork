@@ -21,7 +21,7 @@ function createServiceError(error: unknown, message: string): Error {
 
 export async function getCars(signal?: AbortSignal): Promise<Car[]> {
   try {
-    const response = await apiClient.get<Car[]>("/cars", { signal });
+    const response = await apiClient.get<Car[]>("api/cars", { signal });
     return response.data;
   } catch (error) {
     if (axios.isCancel(error)) {
@@ -36,7 +36,7 @@ export async function getCarById(
   signal?: AbortSignal,
 ): Promise<Car> {
   try {
-    const response = await apiClient.get<Car>(`/cars/${id}`, { signal });
+    const response = await apiClient.get<Car>(`api/cars/${id}`, { signal });
     return response.data;
   } catch (error) {
     if (axios.isCancel(error)) {
@@ -48,7 +48,7 @@ export async function getCarById(
 
 export async function createCar(car: NewCar): Promise<Car> {
   try {
-    const response = await apiClient.post<Car>("/cars", car);
+    const response = await apiClient.post<Car>("api/cars", car);
     return response.data;
   } catch (error) {
     throw createServiceError(error, "Nie udalo sie dodac samochodu.");
@@ -57,7 +57,7 @@ export async function createCar(car: NewCar): Promise<Car> {
 
 export async function updateCar(id: string, car: NewCar): Promise<void> {
   try {
-    await apiClient.put(`/cars/${id}`, car);
+    await apiClient.put(`api/cars/${id}`, car);
   } catch (error) {
     throw createServiceError(error, "Nie udalo sie zaktualizowac samochodu.");
   }
@@ -65,7 +65,7 @@ export async function updateCar(id: string, car: NewCar): Promise<void> {
 
 export async function deleteCar(id: string): Promise<void> {
   try {
-    await apiClient.delete(`/cars/${id}`);
+    await apiClient.delete(`api/cars/${id}`);
   } catch (error) {
     throw createServiceError(error, "Nie udalo sie usunac samochodu.");
   }
