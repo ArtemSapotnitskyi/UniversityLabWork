@@ -30,4 +30,10 @@ public class Car
     public DateTime ProductionDate { get; set; }
     public double AverageFuelConsumption { get; set; }
     public BodyType BodyType { get; set; }
+
+    // Relacja 1:N - jeden samochód może mieć wiele zdjęć.
+    public ICollection<CarPhoto> Photos { get; set; } = new List<CarPhoto>();
+
+    // Relacja N:M - samochód może mieć wiele elementów wyposażenia.
+    public ICollection<Feature> Features { get; set; } = new List<Feature>();
 }

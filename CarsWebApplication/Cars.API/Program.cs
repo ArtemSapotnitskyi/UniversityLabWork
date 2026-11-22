@@ -91,6 +91,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(GetCarsList.Handler).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(Cars.Application.Photos.UploadCarPhoto.Handler).Assembly);
 });
 
 // FluentValidation
@@ -131,6 +132,8 @@ try
     await IdentitySeed.SeedAsync(services);
 
     await Seed.SeedData(context);
+    
+    await FeatureSeed.SeedAsync(context);
 }
 catch (Exception ex)
 {

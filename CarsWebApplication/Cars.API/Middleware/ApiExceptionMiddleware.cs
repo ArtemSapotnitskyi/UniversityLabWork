@@ -25,7 +25,11 @@ public class ApiExceptionMiddleware
         }
         catch (ValidationException ex)
         {
-            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            _logger.LogWarning(ex, "Validation error occurred.");
+
+            context.Response.StatusCode =
+                (int)HttpStatusCode.BadRequest;
+
             context.Response.ContentType = "application/json";
 
             var errors = ex.Errors
@@ -43,16 +47,37 @@ public class ApiExceptionMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An unexpected error occurred.");
+            var (statusCode, title) = ex switch
+            {
+                BadHttpRequestException =>
+                    (HttpStatusCode.BadRequest, "Bad request"),
 
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                ArgumentException =>
+                    (HttpStatusCode.BadRequest, "Invalid request"),
+
+                _ =>
+                    (HttpStatusCode.InternalServerError, "Server error")
+            };
+
+            if ((int)statusCode >= 500)
+            {
+                _logger.LogError(ex, "An unexpected error occurred.");
+            }
+            else
+            {
+                _logger.LogWarning(ex, "Request rejected.");
+            }
+
+            context.Response.StatusCode = (int)statusCode;
             context.Response.ContentType = "application/json";
 
             await context.Response.WriteAsJsonAsync(new
             {
-                title = "Server error",
-                status = 500,
-                detail = "An unexpected error occurred."
+                title,
+                status = (int)statusCode,
+                detail = (int)statusCode == 400
+                    ? ex.Message
+                    : "An unexpected error occurred."
             });
         }
     }
